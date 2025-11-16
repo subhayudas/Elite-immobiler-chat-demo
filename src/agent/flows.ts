@@ -26,9 +26,9 @@ export function setLastIntent(session: AgentSession, intent: Intent): void {
 
 export function flowEmergency(session: AgentSession): ChatResponse {
 	const reply =
-		"Is this a true emergency affecting life, safety, or severe property damage (e.g., active water leak, smell of gas, fire, no heat in winter)?\n" +
-		`If YES: Call ${COMPANY.emergency.phone} immediately. ${COMPANY.emergency.instructions}\n` +
-		"If NO: I can help you create a maintenance request. Please describe the issue.";
+		"Is this a true emergency (active water leak, fire/smoke, gas smell, requires emergency workers, or no heat in winter)?\n" +
+		"/ S’agit-il d’une véritable urgence (fuite active, feu/fumée, odeur de gaz, situation nécessitant les services d’urgence, ou absence de chauffage en hiver) ?\n" +
+		"Quick replies: Yes / No";
 	return { reply, session, handoff: { to: "emergency", reason: "Emergency screening" } };
 }
 
@@ -65,10 +65,11 @@ export function flowMaintenance(session: AgentSession, message: string): ChatRes
 
 export function flowBilling(): ChatResponse {
 	const reply =
-		"Billing & Payments:\n" +
-		`- Check balance or pay via RentCafe: ${rentCafeLink()}\n` +
-		`- Reset password: ${rentCafeResetLink()}\n` +
-		"- NSF/service fees are applied per lease policy. If you'd like to dispute a fee, please share the fee and date; I’ll route your request to the Admin team.";
+		"Billing & Payments / Facturation & Paiements:\n" +
+		`- Pay rent / Payer le loyer → ${rentCafeLink()}\n` +
+		`- Forgot password? / Mot de passe oublié ? → ${rentCafeResetLink()}\n` +
+		"- NSF/service fee policy: We charge provider-pass-through; unpaid service fees go to collections; not pursued at TAL. / " +
+		"Nous facturons les coûts du fournisseur; les frais impayés vont en recouvrement; non poursuivis au TAL.";
 	return { reply, session: { id: "n/a", context: {} }, handoff: { to: "admin" } };
 }
 
@@ -91,6 +92,23 @@ export function flowMove(): ChatResponse {
 	return { reply, session: { id: "n/a", context: {} }, handoff: { to: "service" } };
 }
 
+export function flowMoveIn(): ChatResponse {
+	const reply =
+		"Move-In / Emménagement:\n" +
+		"- Key pickup/lockbox instructions provided after scheduling. Utilities setup and welcome letter available.\n" +
+		"- Collect: planned move-in date/time, contact phone.\n" +
+		"- Action: appointment will be scheduled.";
+	return { reply, session: { id: "n/a", context: {} }, handoff: { to: "service" } };
+}
+
+export function flowMoveOut(): ChatResponse {
+	const reply =
+		"Move-Out / Déménagement:\n" +
+		"- Notice requirements, cleaning checklist, equipment returns (e.g., Videotron), key return, walkthrough scheduling.\n" +
+		"- Collect: move-out date/time, forwarding email.";
+	return { reply, session: { id: "n/a", context: {} }, handoff: { to: "service" } };
+}
+
 export function flowParking(): ChatResponse {
 	const reply =
 		"Parking:\n" +
@@ -110,8 +128,8 @@ export function flowNoise(session: AgentSession, message: string): ChatResponse 
 		contact: session.context.contact
 	});
 	const reply =
-		`Noise complaint logged as ${ticket.id}. ` +
-		"Please share dates/times, nature of disturbance, and if this is a repeat occurrence. Repeated cases are escalated.";
+		`Noise complaint logged as ${ticket.id}. / Plainte de bruit enregistrée ${ticket.id}. ` +
+		"Please share when/where/who (if known), recurrence, evidence (optional), and confirm you are safe.";
 	return { reply, session, handoff: { to: "service" } };
 }
 
@@ -150,5 +168,22 @@ export function flowFallback(): ChatResponse {
 	const reply =
 		"I can assist with emergencies, maintenance, payments, leases, move-in/out, parking, noise, internet/cable, portal access, work order status, and documents. How can I help today?";
 	return { reply, session: { id: "n/a", context: {} }, handoff: { to: "none" } };
+}
+
+export function flowStart(): ChatResponse {
+	const reply =
+		"Hi! I’m the Elite Immobilier assistant for tenant support. / Bonjour! Je suis l’assistant Élite Immobilier pour le soutien aux locataires.\n" +
+		"I can help with maintenance, payments, leases, parking, and more. / Je peux aider pour l’entretien, les paiements, les baux, le stationnement, etc.\n" +
+		"If you prefer English or French, let me know. / Préférez-vous l’anglais ou le français ?";
+	return { reply, session: { id: "n/a", context: {} }, handoff: { to: "none" } };
+}
+
+export function flowEmergencyNow(): ChatResponse {
+	const reply =
+		`Please call the emergency line now: ${COMPANY.emergency.phone}. This line is for emergencies only. ` +
+		"If safe, turn off water at the shutoff, cut power at the breaker, and stay clear. / " +
+		"SVP appelez la ligne d’urgence maintenant. Cette ligne est réservée aux urgences. " +
+		"Si c’est sécuritaire, fermez l’eau au robinet d’arrêt, coupez l’alimentation au disjoncteur et éloignez-vous.";
+	return { reply, session: { id: "n/a", context: {} }, handoff: { to: "emergency" } };
 }
 

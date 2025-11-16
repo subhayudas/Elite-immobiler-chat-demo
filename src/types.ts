@@ -7,11 +7,19 @@ export interface ContactInfo {
 }
 
 export interface SessionContext {
+	language?: "en" | "fr";
 	building?: string;
 	unit?: string;
 	contact?: ContactInfo;
 	consentToEnter?: boolean;
 	bestTime?: string;
+	// Profile/global slots
+	tenant_name?: string;
+	building_address?: string;
+	contact_email?: string;
+	contact_phone?: string;
+	preferred_contact?: "phone" | "email";
+	portal_user?: boolean;
 }
 
 export type Intent =
@@ -19,14 +27,23 @@ export type Intent =
 	| "maintenance"
 	| "billing"
 	| "lease"
-	| "move"
+	| "move" // legacy
+	| "move_in"
+	| "move_out"
 	| "parking"
-	| "noise"
-	| "internet"
-	| "portal"
-	| "status"
+	| "noise" // legacy
+	| "noise_complaint"
+	| "internet" // legacy
+	| "internet_cable"
+	| "portal" // legacy
+	| "portal_access"
+	| "status" // legacy
+	| "status_update"
 	| "documents"
-	| "fallback";
+	| "greet"
+	| "human_agent"
+	| "fallback"
+	| "other";
 
 export interface ParsedMessage {
 	intent: Intent;
