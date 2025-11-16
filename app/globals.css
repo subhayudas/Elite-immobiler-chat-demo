@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-deep: #0B1B3B;
+  --brand-accent: #1B66FF;
+  --brand-light: #EAF2FF;
+}
+
+html, body {
+  height: 100%;
+}
+
+.container-max {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: saturate(140%) blur(8px);
+}
+
