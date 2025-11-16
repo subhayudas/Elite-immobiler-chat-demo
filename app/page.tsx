@@ -2,6 +2,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
+import type { ReactNode, HTMLAttributes } from "react";
 import { AIInputWithSearch } from "@/components/AIInputWithSearch";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -14,6 +15,13 @@ type ChatMessage = {
   id: string;
   role: "user" | "assistant";
   content: string;
+};
+
+type CodeRendererProps = HTMLAttributes<HTMLElement> & {
+  inline?: boolean;
+  className?: string;
+  children?: ReactNode;
+  node?: unknown;
 };
 
 export default function HomePage() {
@@ -203,7 +211,7 @@ export default function HomePage() {
                                   ul: ({ node, ...props }) => <ul className="list-disc pl-5 my-2 space-y-1" {...props} />,
                                   ol: ({ node, ...props }) => <ol className="list-decimal pl-5 my-2 space-y-1" {...props} />,
                                   li: ({ node, ...props }) => <li className="text-[14px]" {...props} />,
-                                  code: ({ inline, className, children, ...props }) => {
+                                  code: ({ inline, className, children, ...props }: CodeRendererProps) => {
                                     const isInline = inline ?? false;
                                     if (isInline) {
                                       return <code className="px-1.5 py-[1px] rounded bg-neutral-100 text-[12px]" {...props}>{children}</code>;
