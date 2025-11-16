@@ -15,6 +15,9 @@ type ChatMessage = {
   id: string;
   role: "user" | "assistant";
   content: string;
+  quickReplies?: Array<{ label: string; value: string }>;
+  requiresInput?: boolean;
+  inputType?: string;
 };
 
 type CodeRendererProps = HTMLAttributes<HTMLElement> & {
@@ -29,79 +32,94 @@ export default function HomePage() {
     {
       id: "hello",
       role: "assistant",
-      content:
-        "I'm the Elite Immobilier assistant. How can I help you with property management in Gatineau today?"
+      content: "Hello! I'm your Elite Immobilier assistant. I can help with maintenance requests, billing, lease questions, and more. How can I assist you today?",
+      quickReplies: [
+        { label: "🔧 Maintenance", value: "maintenance" },
+        { label: "💳 Billing", value: "billing" },
+        { label: "📄 Lease", value: "lease" },
+        { label: "🚨 Emergency", value: "emergency" },
+        { label: "👤 Talk to Person", value: "handoff" }
+      ]
     }
   ]);
   const [loading, setLoading] = useState(false);
   const [streamingId, setStreamingId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
 
-  const sendMessage = useCallback(async (value: string, withSearch: boolean) => {
+  const sendMessage = useCallback(async (value: string, withSearch: boolean = false) => {
     const userMsg: ChatMessage = { id: crypto.randomUUID(), role: "user", content: value };
     setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
+    
     try {
       const payload = {
         messages: messages
           .concat(userMsg)
           .map((m) => ({ role: m.role, content: m.content })),
-        enableSearch: withSearch
+        sessionId: sessionId,
+        userId: undefined // Could be set from auth context
       };
+      
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-      if (!res.body) {
-        const fallbackMsg: ChatMessage = {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: "Sorry, I couldn't respond right now."
-        };
-        setMessages((prev) => [...prev, fallbackMsg]);
-        return;
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       }
 
-      const assistantId = crypto.randomUUID();
-      setStreamingId(assistantId);
-      setMessages((prev) => [...prev, { id: assistantId, role: "assistant", content: "" }]);
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let done = false;
-      while (!done) {
-        const { value: chunk, done: doneReading } = await reader.read();
-        done = doneReading;
-        const decoded = decoder.decode(chunk || new Uint8Array(), { stream: !doneReading });
-        if (decoded) {
-          setMessages((prev) =>
-            prev.map((m) => (m.id === assistantId ? { ...m, content: m.content + decoded } : m))
-          );
-          // keep view anchored to bottom during stream
-          requestAnimationFrame(() => {
-            scrollerRef.current?.scrollTo({
-              top: scrollerRef.current.scrollHeight,
-              behavior: "smooth"
-            });
-          });
-        }
+      const responseData = await res.json();
+      
+      if (responseData.error) {
+        throw new Error(responseData.error);
       }
-    } catch {
+
+      // Update session ID
+      if (responseData.sessionId && !sessionId) {
+        setSessionId(responseData.sessionId);
+      }
+
+      // Create assistant message
+      const assistantMsg: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: responseData.message,
+        quickReplies: responseData.quickReplies || [],
+        requiresInput: responseData.requiresInput,
+        inputType: responseData.inputType
+      };
+
+      setMessages((prev) => [...prev, assistantMsg]);
+
+      // Auto-scroll to bottom
+      setTimeout(() => {
+        scrollerRef.current?.scrollTo({ 
+          top: scrollerRef.current.scrollHeight, 
+          behavior: "smooth" 
+        });
+      }, 100);
+
+    } catch (error) {
+      console.error('Chat error:', error);
       const errMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: "assistant",
-        content: "I encountered a problem. Please try again."
+        content: "I encountered a problem. Please try again or contact us directly at 873.660.1498."
       };
       setMessages((prev) => [...prev, errMsg]);
     } finally {
       setLoading(false);
       setStreamingId(null);
-      setTimeout(() => {
-        scrollerRef.current?.scrollTo({ top: scrollerRef.current.scrollHeight, behavior: "smooth" });
-      }, 40);
     }
-  }, [messages]);
+  }, [messages, sessionId]);
+
+  // Handle quick reply button clicks
+  const handleQuickReply = useCallback((value: string) => {
+    sendMessage(value, false);
+  }, [sendMessage]);
 
   const Header = useMemo(
     () => (
@@ -240,6 +258,22 @@ export default function HomePage() {
                               </ReactMarkdown>
                               {streamingId === m.id && (
                                 <span className="inline-block w-[6px] h-4 align-baseline bg-brand-deep/60 ml-0.5 animate-pulse" />
+                              )}
+                              
+                              {/* Quick Reply Buttons */}
+                              {m.quickReplies && m.quickReplies.length > 0 && (
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                  {m.quickReplies.map((reply, index) => (
+                                    <button
+                                      key={index}
+                                      onClick={() => handleQuickReply(reply.value)}
+                                      className="px-3 py-1.5 text-sm bg-brand-accent/10 text-brand-accent border border-brand-accent/30 rounded-full hover:bg-brand-accent/20 transition-colors duration-200"
+                                      disabled={loading}
+                                    >
+                                      {reply.label}
+                                    </button>
+                                  ))}
+                                </div>
                               )}
                             </div>
                           ) : (
