@@ -30,7 +30,7 @@ export default function HomePage() {
       id: "hello",
       role: "assistant",
       content:
-        "Bonjour! I'm the Elite Immobilier assistant. How can I help you with property management in Gatineau today?"
+        "I'm the Elite Immobilier assistant. How can I help you with property management in Gatineau today?"
     }
   ]);
   const [loading, setLoading] = useState(false);
