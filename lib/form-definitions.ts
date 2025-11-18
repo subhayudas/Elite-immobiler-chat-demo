@@ -104,7 +104,7 @@ export const maintenanceRequestForm: FormDefinition = {
         fr: 'Numéro de téléphone de contact (optionnel)'
       },
       validation: {
-        pattern: '^[+]?[1-9]?[0-9]{7,15}$'
+        pattern: '^.{3,30}$'
       }
     },
     {
@@ -161,7 +161,7 @@ export const emergencyAlertForm: FormDefinition = {
         fr: 'Votre numéro de téléphone de contact'
       },
       validation: {
-        pattern: '^[+]?[1-9]?[0-9]{7,15}$'
+        pattern: '^.{3,30}$'
       }
     },
     {
